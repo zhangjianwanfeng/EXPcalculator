@@ -1,7 +1,7 @@
 from flask import Flask, send_from_directory, request
 from pathlib import Path
 from threading import RLock
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import socket
 import os
 import logging
@@ -120,6 +120,39 @@ def get_today_count():
         lines = LOG_FILE.read_text(encoding='utf-8').splitlines()
         today_count = sum(1 for line in lines if line.startswith(today))
         return str(today_count)
+
+@app.route('/visit-count-yesterday')
+def get_yesterday_count():
+    try:
+        stats = sheets_service.get_visit_stats()
+        return str(stats['yesterday'])
+    except:
+        # 回退到本地计算
+        china_tz = timezone(timedelta(hours=8))
+        yesterday = (datetime.now(china_tz) - timedelta(days=1)).strftime('%Y-%m-%d')
+        lines = LOG_FILE.read_text(encoding='utf-8').splitlines()
+        yesterday_count = sum(1 for line in lines if line.startswith(yesterday))
+        return str(yesterday_count)
+
+@app.route('/visit-stats')
+def get_visit_stats():
+    """获取完整的访问统计信息"""
+    try:
+        stats = sheets_service.get_visit_stats()
+        return {
+            'total': stats['total'],
+            'today': stats['today'],
+            'yesterday': stats['yesterday'],
+            'current_date': stats['current_date']
+        }
+    except Exception as e:
+        logging.error(f"获取访问统计失败: {e}")
+        return {
+            'total': 0,
+            'today': 0,
+            'yesterday': 0,
+            'current_date': _today()
+        }
 
 @app.route('/logs')
 def view_logs():

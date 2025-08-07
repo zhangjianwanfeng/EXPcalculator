@@ -1,6 +1,6 @@
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import logging
 import os
 
@@ -62,6 +62,12 @@ class GoogleSheetsService:
             logging.error(f"连接Google Sheets失败: {e}")
             return False
     
+    def get_current_date(self):
+        """获取当前日期（UTC+8，中国时区）"""
+        # 使用UTC+8时区（中国标准时间）
+        china_tz = timezone(timedelta(hours=8))
+        return datetime.now(china_tz).strftime('%Y-%m-%d')
+    
     def log_visit(self, ip_address, user_agent, additional_info=None):
         """记录访问信息到Google Sheets"""
         try:
@@ -69,8 +75,9 @@ class GoogleSheetsService:
                 if not self.connect():
                     return False
             
-            # 准备数据
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            # 准备数据（使用中国时区）
+            china_tz = timezone(timedelta(hours=8))
+            timestamp = datetime.now(china_tz).strftime('%Y-%m-%d %H:%M:%S')
             data = [
                 timestamp,
                 ip_address,
@@ -81,7 +88,7 @@ class GoogleSheetsService:
             # 添加到工作表
             self.worksheet.append_row(data)
             
-            logging.info(f"成功记录访问信息到Google Sheets: {ip_address}")
+            logging.info(f"成功记录访问信息到Google Sheets: {ip_address} at {timestamp}")
             return True
             
         except Exception as e:
@@ -93,25 +100,43 @@ class GoogleSheetsService:
         try:
             if not self.worksheet:
                 if not self.connect():
-                    return {'total': 0, 'today': 0}
+                    return {'total': 0, 'today': 0, 'yesterday': 0}
             
             # 获取所有数据
             all_values = self.worksheet.get_all_values()
             
             if len(all_values) <= 1:  # 只有标题行
-                return {'total': 0, 'today': 0}
+                return {'total': 0, 'today': 0, 'yesterday': 0}
             
             total_visits = len(all_values) - 1  # 减去标题行
             
-            # 计算今日访问
-            today = datetime.now().strftime('%Y-%m-%d')
-            today_visits = sum(1 for row in all_values[1:] if row[0].startswith(today))
+            # 获取当前日期和昨天日期
+            today = self.get_current_date()
+            china_tz = timezone(timedelta(hours=8))
+            yesterday = (datetime.now(china_tz) - timedelta(days=1)).strftime('%Y-%m-%d')
             
-            return {
+            # 计算今日和昨日访问
+            today_visits = 0
+            yesterday_visits = 0
+            
+            for row in all_values[1:]:  # 跳过标题行
+                if len(row) > 0:
+                    timestamp = row[0]
+                    if timestamp.startswith(today):
+                        today_visits += 1
+                    elif timestamp.startswith(yesterday):
+                        yesterday_visits += 1
+            
+            result = {
                 'total': total_visits,
-                'today': today_visits
+                'today': today_visits,
+                'yesterday': yesterday_visits,
+                'current_date': today
             }
+            
+            logging.info(f"访问统计: 总计 {total_visits}, 今日 {today_visits}, 昨日 {yesterday_visits}, 当前日期 {today}")
+            return result
             
         except Exception as e:
             logging.error(f"获取访问统计失败: {e}")
-            return {'total': 0, 'today': 0}
+            return {'total': 0, 'today': 0, 'yesterday': 0, 'current_date': self.get_current_date()}

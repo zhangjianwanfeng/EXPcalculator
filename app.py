@@ -38,10 +38,39 @@ def _atomic_update(path: Path, update_fn):
         new_text = update_fn(text)
         path.write_text(new_text, encoding='utf-8')
 
+def get_real_ip():
+    """获取真实用户IP地址，处理代理服务器情况"""
+    # 检查各种可能的IP头
+    ip_headers = [
+        'X-Forwarded-For',
+        'X-Real-IP', 
+        'X-Client-IP',
+        'CF-Connecting-IP',  # Cloudflare
+        'X-Forwarded',
+        'Forwarded-For',
+        'Forwarded'
+    ]
+    
+    for header in ip_headers:
+        ip = request.headers.get(header)
+        if ip:
+            # 如果是逗号分隔的多个IP，取第一个
+            if ',' in ip:
+                ip = ip.split(',')[0].strip()
+            # 验证IP格式
+            if ip and ip != 'unknown' and not ip.startswith('127.') and not ip.startswith('10.') and not ip.startswith('192.168.'):
+                logging.info(f"从 {header} 获取到真实IP: {ip}")
+                return ip
+    
+    # 如果没有找到，使用remote_addr
+    ip = request.remote_addr
+    logging.info(f"使用remote_addr作为IP: {ip}")
+    return ip
+
 @app.route('/')
 def index():
     # 获取访问者信息
-    ip_address = request.remote_addr
+    ip_address = get_real_ip()
     user_agent = request.headers.get('User-Agent', '')
     
     # 记录到Google Sheets
@@ -103,6 +132,22 @@ def view_logs():
         if len(parts) == 3:
             date, ip, ua = parts
             html += f"<tr><td>{date}</td><td>{ip}</td><td>{ua}</td></tr>"
+    html += "</table>"
+    return html
+
+@app.route('/debug-headers')
+def debug_headers():
+    """调试路由：查看所有请求头信息"""
+    html = "<h2>请求头信息</h2><table border='1' cellpadding='5'><tr><th>Header</th><th>Value</th></tr>"
+    
+    # 显示所有请求头
+    for header, value in request.headers.items():
+        html += f"<tr><td>{header}</td><td>{value}</td></tr>"
+    
+    # 显示IP相关信息
+    html += f"<tr><td>remote_addr</td><td>{request.remote_addr}</td></tr>"
+    html += f"<tr><td>real_ip (calculated)</td><td>{get_real_ip()}</td></tr>"
+    
     html += "</table>"
     return html
 

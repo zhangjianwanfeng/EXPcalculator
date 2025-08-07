@@ -1,0 +1,262 @@
+/* ----------------------------- CSS Variables ------------------------------ */
+:root {
+  --primary:       #4caf50;
+  --primary-dark:  #409444;
+  --bg:            #f5f7fa;
+  --card:          #fff;
+  --text:          #333;
+  --radius:        12px;
+  --shadow:        0 6px 18px rgba(0, 0, 0, .08);
+}
+
+/* ---------------------------- Global Reset -------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ------------------------------ Layout ------------------------------------ */
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans CJK", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 20px;
+}
+
+/* ------------------------------- Card ------------------------------------- */
+.card {
+  width: 100%;
+  max-width: 450px;
+  padding: 24px 28px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ---------------------------- Typography ---------------------------------- */
+h2 {
+  margin-bottom: 12px;
+  font-size: 22px;
+  text-align: center;
+}
+
+/* ---------------------------- Version Info -------------------------------- */
+.version-info {
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: var(--radius);
+  font-size: 11px;
+  text-align: center;
+  color: #666;
+}
+
+.version-info p {
+  margin: 2px 0;
+}
+
+/* ------------------------------- Form ------------------------------------- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+}
+
+input[type="number"] {
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #ccd1d9;
+  border-radius: var(--radius);
+  transition: border-color .2s;
+}
+
+input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* -------------------------------- Button ---------------------------------- */
+button {
+  width: 100%;
+  padding: 12px 0;
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background .2s;
+}
+
+button:disabled {
+  background: #c8c8c8;
+  cursor: not-allowed;
+}
+
+button:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+}
+
+button:not(:disabled):hover {
+  background: var(--primary-dark);
+}
+
+/* ------------------------------ Results ----------------------------------- */
+.results {
+  margin-top: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.results p {
+  margin: 6px 0;
+}
+
+.results span,
+#countdown {
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+#accelInfo {
+  color: #e67e22;
+  font-weight: 600;
+}
+
+/* ---------------------------- Overlay / Editor ---------------------------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background: rgba(0, 0, 0, .4);
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.editor {
+  width: 90vw;
+  max-width: 660px;
+  max-height: 80vh;
+  padding: 24px;
+  overflow: auto;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ------------------------------ Table ------------------------------------- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 6px;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+th {
+  background: #f0f2f5;
+  position: sticky;
+  top: 0;
+}
+
+td[contenteditable] {
+  background: #fffbea;
+}
+
+/* ------------------------ Editor Action Buttons --------------------------- */
+.editor-actions {
+  margin-top: 16px;
+  text-align: right;
+}
+
+.editor-actions button {
+  width: auto;
+  margin-left: 8px;
+  padding: 8px 16px;
+}
+
+.editor-actions .secondary {
+  background: #888;
+  color: #fff;
+}
+
+/* -------------------------- Visit Counter --------------------------------- */
+#visitCounterFixed {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 8px 0;
+  font-size: .85em;
+  text-align: center;
+  background: #f2f2f2;
+  color: #555;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, .05);
+  z-index: 1000;
+}
+
+#visitCounterFixed a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+#visitCounterFixed a:hover {
+  text-decoration: underline;
+}
+
+/* ---------------------------- Responsive Design ---------------------------- */
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+  
+  .card {
+    padding: 20px 24px;
+  }
+  
+  h2 {
+    font-size: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 10px;
+  }
+  
+  input[type="number"] {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  
+  button {
+    padding: 10px 0;
+    font-size: 15px;
+  }
+  
+  .results {
+    margin-top: 16px;
+    font-size: 12px;
+  }
+  
+  #visitCounterFixed {
+    font-size: .8em;
+    padding: 6px 0;
+  }
+}

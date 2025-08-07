@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+  <title>经验时间计算器</title>
+  <link rel="stylesheet" href="static/css/style.css">
+  <script src="static/js/app.js" defer></script>
+</head>
+
+<body>
+  <main class="card">
+    <h2>经验时间计算器</h2>
+    <div class="version-info">
+      <p>版本 1.0.7 – 龙之国20250731 </p>
+      <p>经验表版本 S2龙之国版本 Ver2.1.1 (1-240级)</p>
+    </div>
+    <form id="expForm" autocomplete="off" novalidate>
+      <div class="form-group">
+        <label for="currentLevel">现在等级</label>
+        <input
+          id="currentLevel"
+          type="number"
+          min="1"
+          placeholder="如 98"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="currentExp">现有经验</label>
+        <input
+          id="currentExp"
+          type="number"
+          min="0"
+          placeholder="如 5000"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="targetLevel">目标等级</label>
+        <input
+          id="targetLevel"
+          type="number"
+          min="1"
+          placeholder="如 100"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="expPerHour">每小时经验</label>
+        <input
+          id="expPerHour"
+          type="number"
+          min="1"
+          placeholder="如 20000"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="dailyAccel">日常加速次数</label>
+        <input
+          id="dailyAccel"
+          type="number"
+          min="0"
+          max="10"
+          value="0"
+          placeholder="如 3"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="stoneAccel">加速石头次数</label>
+        <input
+          id="stoneAccel"
+          type="number"
+          min="0"
+          max="50"
+          value="0"
+          placeholder="如 5"
+        >
+      </div>
+      
+      <button id="calcBtn"  type="submit"  disabled>开始计算</button>
+      
+    </form>
+    <section
+      id="results"
+      class="results"
+      hidden
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <p id="remainingExp"></p>
+      <p id="neededSeconds"></p>
+      <p id="accelInfo"></p>
+      <p id="nowTime"></p>
+      <p id="finishTime"></p>
+      <p id="countdown"></p>
+    </section>
+  </main>
+  <footer id="visitCounterFixed">
+    页面访问次数：<span id="counter">加载中...</span>
+    ｜今日访问：<span id="todayCounter">加载中...</span>
+  </footer>
+</body>
+</html>

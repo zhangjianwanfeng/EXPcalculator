@@ -4,11 +4,6 @@ from threading import RLock
 from datetime import datetime
 import socket
 import os
-import logging
-from services.google_sheets import GoogleSheetsService
-
-# 配置日志
-logging.basicConfig(level=logging.INFO)
 
 BASE_DIR = Path(__file__).resolve().parent
 CSV_FILE = BASE_DIR / '1.csv'
@@ -17,9 +12,6 @@ LOG_FILE = BASE_DIR / 'visit_log.txt'
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 _lock = RLock()
-
-# 初始化Google Sheets服务
-sheets_service = GoogleSheetsService()
 
 def _ensure(path: Path, default: str = ''):
     if not path.exists():
@@ -40,17 +32,8 @@ def _atomic_update(path: Path, update_fn):
 
 @app.route('/')
 def index():
-    # 获取访问者信息
-    ip_address = request.remote_addr
-    user_agent = request.headers.get('User-Agent', '')
-    
-    # 记录到Google Sheets
-    sheets_service.log_visit(ip_address, user_agent)
-    
-    # 更新本地计数器
     _atomic_update(COUNTER_FILE, lambda x: str(int(x or '0') + 1))
-    _atomic_update(LOG_FILE, lambda x: x + f"{_today()} | {ip_address} | {user_agent}\n")
-    
+    _atomic_update(LOG_FILE, lambda x: x + f"{_today()} | {request.remote_addr} | {request.headers.get('User-Agent')}\n")
     return send_from_directory('.', 'index.html')
 
 @app.route('/1.csv')
@@ -73,24 +56,20 @@ def save_csv():
 @app.route('/visit-count')
 def get_visit_count():
     try:
-        stats = sheets_service.get_visit_stats()
-        return str(stats['total'])
-    except:
-        # 如果Google Sheets不可用，回退到本地文件
         count = COUNTER_FILE.read_text(encoding='utf-8').strip()
         return count or '0'
+    except:
+        return '0'
 
 @app.route('/visit-count-today')
 def get_today_count():
     try:
-        stats = sheets_service.get_visit_stats()
-        return str(stats['today'])
-    except:
-        # 回退到本地计算
         today = _today()
         lines = LOG_FILE.read_text(encoding='utf-8').splitlines()
         today_count = sum(1 for line in lines if line.startswith(today))
         return str(today_count)
+    except:
+        return '0'
 
 @app.route('/logs')
 def view_logs():
@@ -105,6 +84,7 @@ def view_logs():
             html += f"<tr><td>{date}</td><td>{ip}</td><td>{ua}</td></tr>"
     html += "</table>"
     return html
+
 
 if __name__ == '__main__':
     # 获取端口，支持Vercel等平台

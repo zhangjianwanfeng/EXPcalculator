@@ -42,3 +42,5 @@ Thumbs.db
 # Local data files (optional - remove if you want to track these)
 counter.txt
 visit_log.txt
+credentials.json
+config.py

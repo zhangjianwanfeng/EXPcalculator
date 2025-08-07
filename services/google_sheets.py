@@ -4,10 +4,18 @@ from datetime import datetime
 import logging
 import os
 
+# 导入配置
+try:
+    from config import GOOGLE_SHEETS_ID, WORKSHEET_NAME, CREDENTIALS_FILE
+except ImportError:
+    GOOGLE_SHEETS_ID = None
+    WORKSHEET_NAME = "访问记录"
+    CREDENTIALS_FILE = "credentials.json"
+
 class GoogleSheetsService:
-    def __init__(self, spreadsheet_id=None, worksheet_name="访问记录"):
-        self.spreadsheet_id = spreadsheet_id or os.environ.get('GOOGLE_SHEETS_ID')
-        self.worksheet_name = worksheet_name
+    def __init__(self, spreadsheet_id=None, worksheet_name=None):
+        self.spreadsheet_id = spreadsheet_id or GOOGLE_SHEETS_ID or os.environ.get('GOOGLE_SHEETS_ID')
+        self.worksheet_name = worksheet_name or WORKSHEET_NAME
         self.client = None
         self.worksheet = None
         
@@ -29,13 +37,12 @@ class GoogleSheetsService:
                 )
             else:
                 # 尝试从文件读取凭据
-                credentials_file = 'credentials.json'
-                if os.path.exists(credentials_file):
+                if os.path.exists(CREDENTIALS_FILE):
                     credentials = Credentials.from_service_account_file(
-                        credentials_file, scopes=scope
+                        CREDENTIALS_FILE, scopes=scope
                     )
                 else:
-                    logging.warning("未找到Google Sheets凭据，将使用本地存储")
+                    logging.warning(f"未找到Google Sheets凭据文件: {CREDENTIALS_FILE}")
                     return False
             
             # 创建客户端
@@ -45,7 +52,7 @@ class GoogleSheetsService:
             if self.spreadsheet_id:
                 spreadsheet = self.client.open_by_key(self.spreadsheet_id)
                 self.worksheet = spreadsheet.worksheet(self.worksheet_name)
-                logging.info("成功连接到Google Sheets")
+                logging.info(f"成功连接到Google Sheets: {self.spreadsheet_id}")
                 return True
             else:
                 logging.warning("未设置Google Sheets ID")
@@ -74,7 +81,7 @@ class GoogleSheetsService:
             # 添加到工作表
             self.worksheet.append_row(data)
             
-            logging.info(f"成功记录访问信息: {ip_address}")
+            logging.info(f"成功记录访问信息到Google Sheets: {ip_address}")
             return True
             
         except Exception as e:

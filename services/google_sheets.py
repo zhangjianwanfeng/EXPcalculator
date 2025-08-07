@@ -4,18 +4,11 @@ from datetime import datetime
 import logging
 import os
 
-# 导入配置
-try:
-    from config import GOOGLE_SHEETS_ID, WORKSHEET_NAME, CREDENTIALS_FILE
-except ImportError:
-    GOOGLE_SHEETS_ID = None
-    WORKSHEET_NAME = "访问记录"
-    CREDENTIALS_FILE = "credentials.json"
-
 class GoogleSheetsService:
     def __init__(self, spreadsheet_id=None, worksheet_name=None):
-        self.spreadsheet_id = spreadsheet_id or GOOGLE_SHEETS_ID or os.environ.get('GOOGLE_SHEETS_ID')
-        self.worksheet_name = worksheet_name or WORKSHEET_NAME
+        # 优先使用环境变量，然后使用配置文件，最后使用默认值
+        self.spreadsheet_id = spreadsheet_id or os.environ.get('GOOGLE_SHEETS_ID')
+        self.worksheet_name = worksheet_name or "Sheet1"  # 使用默认工作表名称
         self.client = None
         self.worksheet = None
         
@@ -28,21 +21,28 @@ class GoogleSheetsService:
                 'https://www.googleapis.com/auth/drive'
             ]
             
-            # 尝试从环境变量获取凭据
+            # 优先尝试从环境变量获取凭据
             credentials_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
             if credentials_json:
                 import json
-                credentials = Credentials.from_service_account_info(
-                    json.loads(credentials_json), scopes=scope
-                )
-            else:
-                # 尝试从文件读取凭据
-                if os.path.exists(CREDENTIALS_FILE):
-                    credentials = Credentials.from_service_account_file(
-                        CREDENTIALS_FILE, scopes=scope
+                try:
+                    credentials = Credentials.from_service_account_info(
+                        json.loads(credentials_json), scopes=scope
                     )
+                    logging.info("使用环境变量中的Google Sheets凭据")
+                except json.JSONDecodeError as e:
+                    logging.error(f"环境变量中的JSON格式错误: {e}")
+                    return False
+            else:
+                # 尝试从文件读取凭据（本地开发用）
+                credentials_file = 'credentials.json'
+                if os.path.exists(credentials_file):
+                    credentials = Credentials.from_service_account_file(
+                        credentials_file, scopes=scope
+                    )
+                    logging.info("使用本地凭据文件")
                 else:
-                    logging.warning(f"未找到Google Sheets凭据文件: {CREDENTIALS_FILE}")
+                    logging.warning("未找到Google Sheets凭据（环境变量或文件）")
                     return False
             
             # 创建客户端
@@ -52,7 +52,7 @@ class GoogleSheetsService:
             if self.spreadsheet_id:
                 spreadsheet = self.client.open_by_key(self.spreadsheet_id)
                 self.worksheet = spreadsheet.worksheet(self.worksheet_name)
-                logging.info(f"成功连接到Google Sheets: {self.spreadsheet_id}")
+                logging.info(f"成功连接到Google Sheets: {self.spreadsheet_id}, 工作表: {self.worksheet_name}")
                 return True
             else:
                 logging.warning("未设置Google Sheets ID")

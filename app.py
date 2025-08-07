@@ -145,10 +145,34 @@ def debug_headers():
         html += f"<tr><td>{header}</td><td>{value}</td></tr>"
     
     # 显示IP相关信息
+    real_ip = get_real_ip()
     html += f"<tr><td>remote_addr</td><td>{request.remote_addr}</td></tr>"
-    html += f"<tr><td>real_ip (calculated)</td><td>{get_real_ip()}</td></tr>"
+    html += f"<tr><td>real_ip (calculated)</td><td>{real_ip}</td></tr>"
+    
+    # 添加IP类型判断
+    if real_ip.startswith('192.168.') or real_ip.startswith('10.') or real_ip.startswith('172.'):
+        ip_type = "内网IP"
+    elif real_ip.startswith('127.'):
+        ip_type = "本地回环IP"
+    else:
+        ip_type = "公网IP（ISP IP）"
+    
+    html += f"<tr><td>IP类型</td><td>{ip_type}</td></tr>"
+    html += f"<tr><td>说明</td><td>这是正常的！公网IP用于网站访问统计</td></tr>"
     
     html += "</table>"
+    
+    # 添加说明
+    html += """
+    <h3>IP地址说明：</h3>
+    <ul>
+    <li><strong>公网IP（ISP IP）</strong>：正常情况，所有连接到同一WiFi的设备共享此IP</li>
+    <li><strong>内网IP</strong>：192.168.x.x，只在局域网内有效</li>
+    <li><strong>本地IP</strong>：127.x.x.x，本地开发环境</li>
+    </ul>
+    <p><strong>结论</strong>：获取到WiFi供应商的IP是完全正常的！</p>
+    """
+    
     return html
 
 if __name__ == '__main__':
